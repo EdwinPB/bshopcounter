@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Counter from "@/components/counter/Counter";
+import BarberPoleBackground from "@/components/ui/BarberPoleBackground";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export default async function BarbershopPage({
@@ -44,5 +45,15 @@ export default async function BarbershopPage({
     );
   }
 
-  return <Counter name={barbershop.name} count={counter?.value ?? 0} slug={barbershopSlug} />;
+  return (
+    <BarberPoleBackground>
+      <main className="flex flex-1 items-center justify-center p-8">
+        <Counter
+          name={barbershop.name}
+          count={counter?.value ?? 0}
+          slug={barbershopSlug}
+        />
+      </main>
+    </BarberPoleBackground>
+  );
 }

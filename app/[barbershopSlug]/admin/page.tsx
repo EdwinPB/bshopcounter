@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import LoginForm from "@/components/admin/LoginForm";
 import CounterForm from "@/components/admin/CounterForm";
+import BarberPoleBackground from "@/components/ui/BarberPoleBackground";
 import { getSession } from "@/lib/session";
 import { login, logout, updateCounter } from "@/lib/actions";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -36,12 +37,14 @@ export default async function AdminPage({
 
   if (!authorized) {
     return (
-      <main className="flex flex-1 items-center justify-center p-8">
-        <LoginForm
-          name={barbershop.name}
-          action={login.bind(null, barbershopSlug)}
-        />
-      </main>
+      <BarberPoleBackground>
+        <main className="flex flex-1 items-center justify-center p-8">
+          <LoginForm
+            name={barbershop.name}
+            action={login.bind(null, barbershopSlug)}
+          />
+        </main>
+      </BarberPoleBackground>
     );
   }
 
@@ -52,13 +55,15 @@ export default async function AdminPage({
     .maybeSingle();
 
   return (
-    <main className="flex flex-1 items-center justify-center p-8">
-      <CounterForm
-        name={barbershop.name}
-        count={counter?.value ?? 0}
-        updateAction={updateCounter.bind(null, barbershopSlug)}
-        logoutAction={logout}
-      />
-    </main>
+    <BarberPoleBackground>
+      <main className="flex flex-1 items-center justify-center p-8">
+        <CounterForm
+          name={barbershop.name}
+          count={counter?.value ?? 0}
+          updateAction={updateCounter.bind(null, barbershopSlug)}
+          logoutAction={logout}
+        />
+      </main>
+    </BarberPoleBackground>
   );
 }
