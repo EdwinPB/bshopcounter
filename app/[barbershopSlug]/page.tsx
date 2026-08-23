@@ -9,7 +9,7 @@ export default async function BarbershopPage({
   const supabase = createServerSupabaseClient();
 
   const { data: barbershop, error: shopError } = await supabase
-    .from("barbershops")
+    .from("public_barbershops")
     .select("id, name")
     .eq("slug", barbershopSlug)
     .maybeSingle();
