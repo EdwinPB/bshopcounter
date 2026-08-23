@@ -1,9 +1,13 @@
+import LiveCounter from "./LiveCounter";
+
 export default function Counter({
   name,
   count,
+  slug,
 }: {
   name: string;
   count: number;
+  slug: string;
 }) {
   return (
     <div className="flex flex-col items-center gap-6 text-center">
@@ -13,9 +17,7 @@ export default function Counter({
       <p className="text-xl text-neutral-500 sm:text-2xl">
         Clientes esperando
       </p>
-      <span className="text-[clamp(7rem,26vw,20rem)] font-black leading-none tracking-tight text-neutral-950 tabular-nums">
-        {count}
-      </span>
+      <LiveCounter initialCount={count} slug={slug} />
     </div>
   );
 }

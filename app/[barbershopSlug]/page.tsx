@@ -44,5 +44,5 @@ export default async function BarbershopPage({
     );
   }
 
-  return <Counter name={barbershop.name} count={counter?.value ?? 0} />;
+  return <Counter name={barbershop.name} count={counter?.value ?? 0} slug={barbershopSlug} />;
 }

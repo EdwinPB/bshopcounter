@@ -1,9 +1,64 @@
+import { notFound } from "next/navigation";
+import LoginForm from "@/components/admin/LoginForm";
 import CounterForm from "@/components/admin/CounterForm";
+import { getSession } from "@/lib/session";
+import { login, logout, updateCounter } from "@/lib/actions";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-export default function AdminPage() {
+export default async function AdminPage({
+  params,
+}: PageProps<"/[barbershopSlug]/admin">) {
+  const { barbershopSlug } = await params;
+  const supabase = createServerSupabaseClient();
+
+  const { data: barbershop, error: shopError } = await supabase
+    .from("public_barbershops")
+    .select("id, name")
+    .eq("slug", barbershopSlug)
+    .maybeSingle();
+
+  if (shopError) {
+    return (
+      <main className="flex flex-1 items-center justify-center p-8">
+        <p className="text-neutral-600 text-lg">
+          No se pudo cargar la barbería.
+        </p>
+      </main>
+    );
+  }
+
+  if (!barbershop) {
+    notFound();
+  }
+
+  const session = await getSession();
+  const authorized = session?.barbershopSlug === barbershopSlug;
+
+  if (!authorized) {
+    return (
+      <main className="flex flex-1 items-center justify-center p-8">
+        <LoginForm
+          name={barbershop.name}
+          action={login.bind(null, barbershopSlug)}
+        />
+      </main>
+    );
+  }
+
+  const { data: counter } = await supabase
+    .from("counters")
+    .select("value")
+    .eq("barbershop_id", barbershop.id)
+    .maybeSingle();
+
   return (
     <main className="flex flex-1 items-center justify-center p-8">
-      <CounterForm />
+      <CounterForm
+        name={barbershop.name}
+        count={counter?.value ?? 0}
+        updateAction={updateCounter.bind(null, barbershopSlug)}
+        logoutAction={logout}
+      />
     </main>
   );
 }
