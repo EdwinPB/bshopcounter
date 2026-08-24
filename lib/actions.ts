@@ -9,6 +9,7 @@ import {
   getSession,
 } from "@/lib/session";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
+import { estimateWaitingMinutes } from "@/lib/waiting-time";
 
 const MAX_VALUE = 1000000;
 
@@ -72,7 +73,7 @@ export async function updateCounter(
   slug: string,
   _prevState: { error?: string },
   formData: FormData,
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; estimatedMinutes?: number }> {
   const session = await getSession();
   if (!session) {
     return { error: "No autenticado." };
@@ -101,7 +102,7 @@ export async function updateCounter(
   revalidatePath(`/${slug}`);
   revalidatePath(`/${slug}/admin`);
 
-  return {};
+  return { estimatedMinutes: estimateWaitingMinutes(value) };
 }
 
 export async function startJornada(

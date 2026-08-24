@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { estimateWaitingMinutes, formatWaitTime } from "@/lib/waiting-time";
 
 function JornadaButton({
   action,
@@ -47,9 +48,9 @@ export default function CounterForm({
   count: number;
   isOpen: boolean;
   updateAction: (
-    state: { error?: string },
+    state: { error?: string; estimatedMinutes?: number },
     formData: FormData,
-  ) => Promise<{ error?: string }>;
+  ) => Promise<{ error?: string; estimatedMinutes?: number }>;
   startJornadaAction: (
     state: { error?: string },
     formData: FormData,
@@ -62,6 +63,12 @@ export default function CounterForm({
 }) {
   const [value, setValue] = useState(String(count));
   const [state, formAction, pending] = useActionState(updateAction, {});
+
+  const parsed = parseInt(value, 10);
+  const currentEstimate = estimateWaitingMinutes(
+    Number.isNaN(parsed) ? 0 : parsed,
+  );
+  const estimatedMinutes = state?.estimatedMinutes ?? currentEstimate;
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-6 rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
@@ -96,6 +103,12 @@ export default function CounterForm({
         <p className="mt-1 text-neutral-500">Clientes actualmente esperando</p>
         <div className="mt-3 text-6xl font-black text-neutral-950 tabular-nums">
           {count}
+        </div>
+        <div className="mt-3 flex flex-col items-center gap-1">
+          <p className="text-sm text-neutral-400">Tiempo estimado</p>
+          <p className="text-xl font-bold text-neutral-800">
+            {formatWaitTime(estimatedMinutes)}
+          </p>
         </div>
       </div>
 

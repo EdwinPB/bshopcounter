@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { estimateWaitingMinutes } from "@/lib/waiting-time";
 
 export async function GET(
   _req: Request,
@@ -25,8 +26,11 @@ export async function GET(
     .eq("barbershop_id", barbershop.id)
     .maybeSingle();
 
+  const value = counter?.value ?? 0;
+
   return NextResponse.json({
-    value: counter?.value ?? 0,
+    value,
     is_open: barbershop.is_open ?? false,
+    estimatedMinutes: estimateWaitingMinutes(value),
   });
 }
