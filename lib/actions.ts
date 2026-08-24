@@ -103,3 +103,68 @@ export async function updateCounter(
 
   return {};
 }
+
+export async function startJornada(
+  slug: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _prevState: { error?: string },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _formData: FormData,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session || session.barbershopSlug !== slug) {
+    return { error: "No autenticado." };
+  }
+
+  const supabase = createServiceRoleSupabaseClient();
+
+  const { error } = await supabase
+    .from("barbershops")
+    .update({
+      is_open: true,
+      opened_at: new Date().toISOString(),
+      closed_at: null,
+    })
+    .eq("id", session.barbershopId);
+
+  if (error) {
+    return { error: "No se pudo iniciar la jornada." };
+  }
+
+  revalidatePath(`/${slug}`);
+  revalidatePath(`/${slug}/admin`);
+
+  return {};
+}
+
+export async function finishJornada(
+  slug: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _prevState: { error?: string },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _formData: FormData,
+): Promise<{ error?: string }> {
+  const session = await getSession();
+  if (!session || session.barbershopSlug !== slug) {
+    return { error: "No autenticado." };
+  }
+
+  const supabase = createServiceRoleSupabaseClient();
+
+  const { error } = await supabase
+    .from("barbershops")
+    .update({
+      is_open: false,
+      closed_at: new Date().toISOString(),
+    })
+    .eq("id", session.barbershopId);
+
+  if (error) {
+    return { error: "No se pudo finalizar la jornada." };
+  }
+
+  revalidatePath(`/${slug}`);
+  revalidatePath(`/${slug}/admin`);
+
+  return {};
+}

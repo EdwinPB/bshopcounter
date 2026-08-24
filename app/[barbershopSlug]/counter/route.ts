@@ -11,7 +11,7 @@ export async function GET(
 
   const { data: barbershop } = await supabase
     .from("public_barbershops")
-    .select("id")
+    .select("id, is_open")
     .eq("slug", barbershopSlug)
     .maybeSingle();
 
@@ -25,5 +25,8 @@ export async function GET(
     .eq("barbershop_id", barbershop.id)
     .maybeSingle();
 
-  return NextResponse.json({ value: counter?.value ?? 0 });
+  return NextResponse.json({
+    value: counter?.value ?? 0,
+    is_open: barbershop.is_open ?? false,
+  });
 }

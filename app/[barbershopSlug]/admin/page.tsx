@@ -3,7 +3,13 @@ import LoginForm from "@/components/admin/LoginForm";
 import CounterForm from "@/components/admin/CounterForm";
 import BarberPoleBackground from "@/components/ui/BarberPoleBackground";
 import { getSession } from "@/lib/session";
-import { login, logout, updateCounter } from "@/lib/actions";
+import {
+  finishJornada,
+  login,
+  logout,
+  startJornada,
+  updateCounter,
+} from "@/lib/actions";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export default async function AdminPage({
@@ -14,7 +20,7 @@ export default async function AdminPage({
 
   const { data: barbershop, error: shopError } = await supabase
     .from("public_barbershops")
-    .select("id, name")
+    .select("id, name, is_open")
     .eq("slug", barbershopSlug)
     .maybeSingle();
 
@@ -60,7 +66,10 @@ export default async function AdminPage({
         <CounterForm
           name={barbershop.name}
           count={counter?.value ?? 0}
+          isOpen={barbershop.is_open}
           updateAction={updateCounter.bind(null, barbershopSlug)}
+          startJornadaAction={startJornada.bind(null, barbershopSlug)}
+          finishJornadaAction={finishJornada.bind(null, barbershopSlug)}
           logoutAction={logout}
         />
       </main>

@@ -2,15 +2,59 @@
 
 import { useActionState, useState } from "react";
 
+function JornadaButton({
+  action,
+  children,
+  style,
+}: {
+  action: (
+    state: { error?: string },
+    formData: FormData,
+  ) => Promise<{ error?: string }>;
+  children: React.ReactNode;
+  style: "open" | "close";
+}) {
+  const [state, formAction, pending] = useActionState(action, {});
+  const className =
+    style === "open"
+      ? "bg-emerald-600 hover:bg-emerald-500"
+      : "bg-red-600 hover:bg-red-500";
+
+  return (
+    <form action={formAction} className="flex flex-col gap-2">
+      <button
+        type="submit"
+        disabled={pending}
+        className={`rounded-lg px-4 py-3 text-base font-semibold text-white transition active:scale-[0.99] disabled:opacity-50 ${className}`}
+      >
+        {children}
+      </button>
+      {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+    </form>
+  );
+}
+
 export default function CounterForm({
   name,
   count,
+  isOpen,
   updateAction,
+  startJornadaAction,
+  finishJornadaAction,
   logoutAction,
 }: {
   name: string;
   count: number;
+  isOpen: boolean;
   updateAction: (
+    state: { error?: string },
+    formData: FormData,
+  ) => Promise<{ error?: string }>;
+  startJornadaAction: (
+    state: { error?: string },
+    formData: FormData,
+  ) => Promise<{ error?: string }>;
+  finishJornadaAction: (
     state: { error?: string },
     formData: FormData,
   ) => Promise<{ error?: string }>;
@@ -23,9 +67,33 @@ export default function CounterForm({
     <div className="flex w-full max-w-sm flex-col gap-6 rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
       <div className="text-center">
         <h1 className="text-2xl font-bold text-neutral-900">{name}</h1>
-        <p className="mt-1 text-neutral-500">
-          Clientes actualmente esperando
+      </div>
+
+      <div className="rounded-xl bg-neutral-50 p-4 text-center">
+        <p className="text-sm font-medium text-neutral-500">Estado</p>
+        <p
+          className={`mt-1 text-3xl font-black ${
+            isOpen ? "text-emerald-600" : "text-red-600"
+          }`}
+        >
+          {isOpen ? "🟢 Atendiendo" : "🔴 Cerrado"}
         </p>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        {isOpen ? (
+          <JornadaButton action={finishJornadaAction} style="close">
+            🔴 Finalizar jornada
+          </JornadaButton>
+        ) : (
+          <JornadaButton action={startJornadaAction} style="open">
+            🟢 Iniciar jornada
+          </JornadaButton>
+        )}
+      </div>
+
+      <div className="text-center">
+        <p className="mt-1 text-neutral-500">Clientes actualmente esperando</p>
         <div className="mt-3 text-6xl font-black text-neutral-950 tabular-nums">
           {count}
         </div>

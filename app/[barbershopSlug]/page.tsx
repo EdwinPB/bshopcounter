@@ -11,7 +11,7 @@ export default async function BarbershopPage({
 
   const { data: barbershop, error: shopError } = await supabase
     .from("public_barbershops")
-    .select("id, name")
+    .select("id, name, is_open")
     .eq("slug", barbershopSlug)
     .maybeSingle();
 
@@ -51,6 +51,7 @@ export default async function BarbershopPage({
         <Counter
           name={barbershop.name}
           count={counter?.value ?? 0}
+          isOpen={barbershop.is_open}
           slug={barbershopSlug}
         />
       </main>
