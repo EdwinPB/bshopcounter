@@ -14,9 +14,9 @@ export const contentType = "image/png";
 const NAVY = "#16283f";
 const NAVY_DEEP = "#101d30";
 const RED = "#b44b4b";
+const RED_EMPHASIS = "#c85a5a";
 const BLUE = "#3f6ea8";
 const OFFWHITE = "#f5f7fa";
-const MUTED = "#c7d2e0";
 
 function BarberBand({ style }: { style: CSSProperties }) {
   return (
@@ -52,8 +52,8 @@ export default async function Image({
 
   const name = tenant.name.toUpperCase();
   const cta = "¡DALE CLICK AQUÍ!";
-  const explain1 = "para ver cuántas personas faltan";
-  const explain2 = "antes de venir";
+  const benefit1 = "PARA VER CUÁNTAS PERSONAS";
+  const benefit2 = "FALTAN ANTES DE VENIR";
 
   return new ImageResponse(
     (
@@ -132,44 +132,20 @@ export default async function Image({
             alignItems: "center",
             justifyContent: "center",
             textAlign: "center",
-            width: 860,
+            width: 900,
             zIndex: 2,
           }}
         >
-          <div
-            style={{
-              fontSize: 92,
-              fontWeight: 800,
-              letterSpacing: "0.02em",
-              lineHeight: 1.08,
-              color: OFFWHITE,
-              display: "flex",
-              maxWidth: 840,
-            }}
-          >
-            {name}
-          </div>
-
-          <div
-            style={{
-              marginTop: 30,
-              marginBottom: 26,
-              width: 140,
-              height: 6,
-              borderRadius: 999,
-              background: `linear-gradient(90deg, ${RED}, ${BLUE})`,
-              display: "flex",
-            }}
-          />
-
+          {/* 1. CTA — the immediate action */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 24,
+              gap: 22,
               color: OFFWHITE,
-              fontSize: 56,
+              fontSize: 52,
               fontWeight: 800,
+              letterSpacing: "0.01em",
               lineHeight: 1.05,
               textAlign: "center",
             }}
@@ -178,7 +154,7 @@ export default async function Image({
             <span
               style={{
                 color: RED,
-                fontSize: 60,
+                fontSize: 54,
                 fontWeight: 700,
                 display: "flex",
               }}
@@ -187,28 +163,68 @@ export default async function Image({
             </span>
           </div>
 
+          {/* 2. Benefit message — the emotional focal point */}
           <div
             style={{
-              marginTop: 22,
-              color: MUTED,
-              fontSize: 40,
-              fontWeight: 500,
-              lineHeight: 1.25,
+              marginTop: 34,
               display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 6,
             }}
           >
-            {explain1}
+            <div
+              style={{
+                color: OFFWHITE,
+                fontSize: 40,
+                fontWeight: 700,
+                letterSpacing: "0.02em",
+                lineHeight: 1.3,
+                display: "flex",
+              }}
+            >
+              {benefit1}
+            </div>
+            <div
+              style={{
+                color: RED_EMPHASIS,
+                fontSize: 40,
+                fontWeight: 700,
+                letterSpacing: "0.02em",
+                lineHeight: 1.3,
+                display: "flex",
+              }}
+            >
+              {benefit2}
+            </div>
           </div>
+
+          {/* Thin red-to-blue divider */}
           <div
             style={{
-              color: MUTED,
-              fontSize: 40,
-              fontWeight: 500,
-              lineHeight: 1.25,
+              marginTop: 40,
+              marginBottom: 28,
+              width: 120,
+              height: 5,
+              borderRadius: 999,
+              background: `linear-gradient(90deg, ${RED}, ${BLUE})`,
               display: "flex",
             }}
+          />
+
+          {/* 3. Tenant name — refined premium branding, no longer the headline */}
+          <div
+            style={{
+              fontSize: 68,
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              lineHeight: 1.1,
+              color: "#ffffff",
+              display: "flex",
+              maxWidth: 900,
+            }}
           >
-            {explain2}
+            {name}
           </div>
         </div>
       </div>
