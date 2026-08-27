@@ -8,7 +8,11 @@ import {
   deleteSession,
   getSession,
 } from "@/lib/session";
-import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
+import {
+  createServerSupabaseClient,
+  createServiceRoleSupabaseClient,
+} from "@/lib/supabase/server";
+import { normalizeLabel, tenantMatches } from "@/lib/barbershop-resolver";
 import { estimateWaitingMinutes } from "@/lib/waiting-time";
 
 const MAX_VALUE = 1000000;
@@ -103,6 +107,46 @@ export async function updateCounter(
   revalidatePath(`/${slug}/admin`);
 
   return { estimatedMinutes: estimateWaitingMinutes(value) };
+}
+
+export type ResolveBarbershopResult =
+  | { slug: string; name: string; mode: "view" | "admin"; error?: never }
+  | { error: string; slug?: never; name?: never; mode?: never };
+
+// Resolve a user-typed barbershop name/slug against the public tenant records.
+// Runs server-side against the safe public view; never trusts arbitrary ids.
+export async function resolveBarbershop(
+  _prevState: ResolveBarbershopResult | null,
+  formData: FormData,
+): Promise<ResolveBarbershopResult> {
+  const raw = formData.get("name");
+  if (typeof raw !== "string" || raw.trim() === "") {
+    return { error: "Ingresá el nombre de la barbería." };
+  }
+
+  const normalized = normalizeLabel(raw);
+  if (normalized.length === 0) {
+    return { error: "Ingresá el nombre de la barbería." };
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  const { data: tenants, error } = await supabase
+    .from("public_barbershops")
+    .select("slug, name");
+
+  if (error) {
+    return { error: "No encontramos esa barbería." };
+  }
+
+  const match = (tenants ?? []).find((t) => tenantMatches(normalized, t));
+
+  if (!match) {
+    return { error: "No encontramos esa barbería." };
+  }
+
+  const mode = formData.get("mode") === "admin" ? "admin" : "view";
+  return { slug: match.slug, name: match.name, mode };
 }
 
 export async function startJornada(
