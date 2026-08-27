@@ -191,7 +191,7 @@ export default async function Image({
             style={{
               marginTop: 22,
               color: MUTED,
-              fontSize: 34,
+              fontSize: 40,
               fontWeight: 500,
               lineHeight: 1.25,
               display: "flex",
@@ -202,7 +202,7 @@ export default async function Image({
           <div
             style={{
               color: MUTED,
-              fontSize: 34,
+              fontSize: 40,
               fontWeight: 500,
               lineHeight: 1.25,
               display: "flex",
