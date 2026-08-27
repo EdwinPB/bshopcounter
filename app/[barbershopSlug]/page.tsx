@@ -16,7 +16,7 @@ export async function generateMetadata({
 
   const title = `${tenant.name} Peluquería`;
   const description =
-    "Consulta cuántas personas están esperando y el tiempo estimado.";
+    "Dale click para ver cuántas personas están esperando y el tiempo estimado antes de venir.";
 
   return {
     title,
