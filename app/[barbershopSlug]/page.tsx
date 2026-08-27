@@ -1,7 +1,59 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Counter from "@/components/counter/Counter";
 import BarberPoleBackground from "@/components/ui/BarberPoleBackground";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { resolveTenantOrNotFound } from "@/lib/tenant";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[barbershopSlug]">): Promise<Metadata> {
+  const { barbershopSlug } = await params;
+  const tenant = await resolveTenantOrNotFound(barbershopSlug);
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  const ogUrl = `${siteUrl ?? ""}/${tenant.slug}`;
+
+  const title = `${tenant.name} Peluquería`;
+  const description =
+    "Consulta cuántas personas están esperando y el tiempo estimado.";
+
+  return {
+    title,
+    description,
+    openGraph: {
+      type: "website",
+      url: ogUrl,
+      title,
+      description,
+      siteName: tenant.name,
+      images: [
+        {
+          url: `${ogUrl}/opengraph-image`,
+          width: 1200,
+          height: 630,
+          alt: `${tenant.name} · Barbershop Counter`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [
+        {
+          url: `${ogUrl}/twitter-image`,
+          width: 1200,
+          height: 630,
+          alt: `${tenant.name} · Barbershop Counter`,
+        },
+      ],
+    },
+    alternates: {
+      canonical: ogUrl,
+    },
+  };
+}
 
 export default async function BarbershopPage({
   params,
