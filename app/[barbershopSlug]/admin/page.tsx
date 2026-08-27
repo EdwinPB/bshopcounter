@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import LoginForm from "@/components/admin/LoginForm";
 import CounterForm from "@/components/admin/CounterForm";
+import RememberAdminPath from "@/components/pwa/RememberAdminPath";
 import BarberPoleBackground from "@/components/ui/BarberPoleBackground";
 import { getSession } from "@/lib/session";
 import {
@@ -63,6 +64,7 @@ export default async function AdminPage({
   return (
     <BarberPoleBackground>
       <main className="flex flex-1 items-center justify-center p-8">
+        <RememberAdminPath slug={barbershopSlug} />
         <CounterForm
           name={barbershop.name}
           count={counter?.value ?? 0}

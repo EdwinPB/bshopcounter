@@ -1,8 +1,10 @@
 import Link from "next/link";
+import PreferredAdminRedirect from "@/components/pwa/PreferredAdminRedirect";
 
 export default function Home() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-8 p-8 text-center">
+      <PreferredAdminRedirect />
       <h1 className="text-4xl font-bold text-neutral-900">Barbershop Counter</h1>
       <p className="max-w-md text-lg text-neutral-600">
         Selecciona una barbería para ver cuántos clientes esperan. Prueba la
