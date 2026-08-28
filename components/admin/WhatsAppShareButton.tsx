@@ -5,18 +5,23 @@ export default function WhatsAppShareButton({
 }: {
   publicUrl: string;
 }) {
-  // Concise static invitation. The live counter is intentionally excluded so a
-  // stale value is never shared; it stays on the public page.
-  const message = `Mira cuántas personas están esperando y el tiempo estimado antes de venir:\n\n${publicUrl}`;
-  const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+  // Only share a valid absolute http(s) URL. No explanatory text, no live
+  // counter — the OG preview already conveys the purpose. A relative "/slug"
+  // (or empty) value is never acceptable and disables sharing rather than
+  // leaking a broken link.
+  const isAbsolute = /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(publicUrl);
+  const waUrl = isAbsolute
+    ? `https://api.whatsapp.com/send?text=${encodeURIComponent(publicUrl)}`
+    : "";
 
   return (
     <a
-      href={waUrl}
+      href={waUrl || undefined}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Compartir en WhatsApp"
-      className="flex w-full items-center justify-center gap-2 rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-base font-semibold text-green-800 transition hover:bg-green-100 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-700/40 focus-visible:ring-offset-2"
+      aria-disabled={!isAbsolute}
+      className="flex w-full items-center justify-center gap-2 rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-base font-semibold text-green-800 transition hover:bg-green-100 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-700/40 focus-visible:ring-offset-2 disabled:opacity-50"
     >
       <svg
         viewBox="0 0 24 24"

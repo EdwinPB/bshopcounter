@@ -2,8 +2,6 @@ import { test, expect } from "@playwright/test";
 
 test.use({ baseURL: "http://localhost:3000" });
 
-const SITE = "https://bshopcounter.vercel.app";
-
 async function loginAndGetShareHref(
   page: import("@playwright/test").Page,
   slug: string,
@@ -28,38 +26,30 @@ test("yepes admin shares public /yepes URL, never /admin", async ({ page }) => {
   // Standard WhatsApp share deep-link, open in new window.
   expect(href).toContain("https://api.whatsapp.com/send?text=");
 
-  // Encoded: colons, slashes and newlines are percent-encoded.
+  // Encoded: colon + slashes are percent-encoded.
   expect(href).toContain("%3A");
   expect(href).toContain("%2F");
-  expect(href).toContain("%0A");
   expect(href).not.toContain(" ");
 
+  // Exactly the absolute public URL — no explanatory message precedes it.
   const message = decode(href);
-  expect(message).toContain(
-    "Mira cuántas personas están esperando y el tiempo estimado antes de venir:",
-  );
-  // Public tenant URL, never the admin URL, never the access key.
-  expect(message).toBe(
-    "Mira cuántas personas están esperando y el tiempo estimado antes de venir:\n\n" +
-      `${SITE}/yepes`,
-  );
+  expect(message).toBe(`https://bshopcounter.vercel.app/yepes`);
+  expect(message).toMatch(/^https:\/\//);
   expect(message).not.toContain("/admin");
+  expect(message).not.toContain("Mira cuántas");
   expect(href).not.toContain("/admin");
   expect(href).not.toContain("Yepes2026!");
 });
 
-test("barberia-central admin shares public /barberia-central URL", async ({
-  page,
-}) => {
+test("barberia-central admin shares absolute public URL", async ({ page }) => {
   const href = await loginAndGetShareHref(page, "barberia-central", "Polo2026!");
 
   expect(href).toContain("https://api.whatsapp.com/send?text=");
   const message = decode(href);
-  expect(message).toBe(
-    "Mira cuántas personas están esperando y el tiempo estimado antes de venir:\n\n" +
-      `${SITE}/barberia-central`,
-  );
+  expect(message).toBe(`https://bshopcounter.vercel.app/barberia-central`);
+  expect(message).toMatch(/^https:\/\//);
   expect(message).not.toContain("/admin");
+  expect(message).not.toContain("Mira cuántas");
   expect(href).not.toContain("/admin");
 });
 

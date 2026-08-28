@@ -4,6 +4,7 @@ import CounterForm from "@/components/admin/CounterForm";
 import RememberAdminPath from "@/components/pwa/RememberAdminPath";
 import BarberPoleBackground from "@/components/ui/BarberPoleBackground";
 import { getSession } from "@/lib/session";
+import { getPublicTenantUrl } from "@/lib/canonical-url";
 import {
   finishJornada,
   login,
@@ -19,10 +20,10 @@ export default async function AdminPage({
   const { barbershopSlug } = await params;
   const supabase = createServerSupabaseClient();
 
-  // Public share URL, built explicitly from the site base + tenant slug so the
-  // admin `/admin` path can never be shared accidentally.
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
-  const publicUrl = `${siteUrl}/${barbershopSlug}`.replace(/\/+$/, "");
+  // Public share URL: always an absolute http(s) URL (helper validates
+  // NEXT_PUBLIC_SITE_URL and falls back to the request host), so the admin
+  // `/admin` path can never be shared and no relative "/slug" leaks out.
+  const publicUrl = await getPublicTenantUrl(barbershopSlug);
 
   const { data: barbershop, error: shopError } = await supabase
     .from("public_barbershops")
