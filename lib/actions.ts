@@ -73,11 +73,17 @@ export async function logout() {
   redirect("/");
 }
 
+export type CounterUpdateResult = {
+  error?: string;
+  estimatedMinutes?: number;
+  value?: number;
+};
+
 export async function updateCounter(
   slug: string,
   _prevState: { error?: string },
   formData: FormData,
-): Promise<{ error?: string; estimatedMinutes?: number }> {
+): Promise<CounterUpdateResult> {
   const session = await getSession();
   if (!session) {
     return { error: "No autenticado." };
@@ -106,7 +112,64 @@ export async function updateCounter(
   revalidatePath(`/${slug}`);
   revalidatePath(`/${slug}/admin`);
 
-  return { estimatedMinutes: estimateWaitingMinutes(value) };
+  // Return the confirmed persisted value so the admin UI never guesses.
+  return { value, estimatedMinutes: estimateWaitingMinutes(value) };
+}
+
+// -----------------------------------------------------------------------------
+// One-tap quick +/- controls.
+//
+// The +/- buttons never send a target count from the browser. A browser-derived
+// "current + 1" would be racy (rapid taps, or a second admin device on a stale
+// value, could overwrite each other). Instead the server asks Postgres to mutate
+// the row atomically via adjust_counter and returns the confirmed result.
+// -----------------------------------------------------------------------------
+
+export type QuickUpdateResult =
+  | { ok: true; value: number; estimatedMinutes: number }
+  | { ok: false; error: string };
+
+async function quickAdjust(
+  slug: string,
+  delta: 1 | -1,
+): Promise<QuickUpdateResult> {
+  const session = await getSession();
+  if (!session) {
+    return { ok: false, error: "No autenticado." };
+  }
+  if (session.barbershopSlug !== slug) {
+    return { ok: false, error: "No autenticado." };
+  }
+
+  // Delta is fixed server-side (+1 / -1). Tenant id comes from the trusted
+  // HMAC session, never from the browser. The service-role client stays
+  // server-only; adjust_counter is revoked from anon/authenticated.
+  const supabase = createServiceRoleSupabaseClient();
+
+  const { data: value, error } = await supabase.rpc("adjust_counter", {
+    p_barbershop_id: session.barbershopId,
+    p_delta: delta,
+  });
+
+  if (error) {
+    return { ok: false, error: "No se pudo actualizar el contador." };
+  }
+  if (typeof value !== "number") {
+    return { ok: false, error: "No se pudo actualizar el contador." };
+  }
+
+  revalidatePath(`/${slug}`);
+  revalidatePath(`/${slug}/admin`);
+
+  return { ok: true, value, estimatedMinutes: estimateWaitingMinutes(value) };
+}
+
+export async function incrementCounter(slug: string) {
+  return quickAdjust(slug, 1);
+}
+
+export async function decrementCounter(slug: string) {
+  return quickAdjust(slug, -1);
 }
 
 export type ResolveBarbershopResult =

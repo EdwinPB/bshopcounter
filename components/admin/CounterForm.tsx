@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
+import { decrementCounter, incrementCounter } from "@/lib/actions";
 import { estimateWaitingMinutes, formatWaitTime } from "@/lib/waiting-time";
 
 function JornadaButton({
@@ -35,8 +36,25 @@ function JornadaButton({
   );
 }
 
+function ArrowGlyph({ direction }: { direction: "up" | "down" }) {
+  const path = direction === "up" ? "M12 5l7 8H5z" : "M12 19l-7-8h14z";
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="28"
+      height="28"
+      fill="currentColor"
+      aria-hidden="true"
+      className="pointer-events-none"
+    >
+      <path d={path} />
+    </svg>
+  );
+}
+
 export default function CounterForm({
   name,
+  slug,
   count,
   isOpen,
   updateAction,
@@ -45,12 +63,13 @@ export default function CounterForm({
   logoutAction,
 }: {
   name: string;
+  slug: string;
   count: number;
   isOpen: boolean;
   updateAction: (
-    state: { error?: string; estimatedMinutes?: number },
+    state: { error?: string },
     formData: FormData,
-  ) => Promise<{ error?: string; estimatedMinutes?: number }>;
+  ) => Promise<{ error?: string; estimatedMinutes?: number; value?: number }>;
   startJornadaAction: (
     state: { error?: string },
     formData: FormData,
@@ -61,17 +80,78 @@ export default function CounterForm({
   ) => Promise<{ error?: string }>;
   logoutAction: () => Promise<void>;
 }) {
-  const [value, setValue] = useState(String(count));
-  const [state, formAction, pending] = useActionState(updateAction, {});
+  const [currentCount, setCurrentCount] = useState(() => count);
+  const [value, setValue] = useState(() => String(count));
 
-  const parsed = parseInt(value, 10);
-  const currentEstimate = estimateWaitingMinutes(
-    Number.isNaN(parsed) ? 0 : parsed,
-  );
-  const estimatedMinutes = state?.estimatedMinutes ?? currentEstimate;
+  const [quickPending, setQuickPending] = useState(false);
+  const [quickError, setQuickError] = useState<string | null>(null);
+  const quickPendingRef = useRef(false);
+
+  const [manualPending, setManualPending] = useState(false);
+  const [manualError, setManualError] = useState<string | null>(null);
+
+  const estimatedMinutes = estimateWaitingMinutes(currentCount);
+
+  async function applyQuick(delta: 1 | -1) {
+    // Guard against accidental repeated taps before the async write resolves.
+    if (quickPendingRef.current) return;
+    quickPendingRef.current = true;
+    setQuickPending(true);
+    setQuickError(null);
+
+    try {
+      const result =
+        delta === 1
+          ? await incrementCounter(slug)
+          : await decrementCounter(slug);
+
+      if (!result.ok) {
+        setQuickError(result.error);
+        return;
+      }
+
+      setCurrentCount(result.value);
+      setValue(String(result.value));
+    } catch {
+      setQuickError("No se pudo actualizar el contador.");
+    } finally {
+      quickPendingRef.current = false;
+      setQuickPending(false);
+    }
+  }
+
+  async function handleManualSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (manualPending) return;
+    setManualPending(true);
+    setManualError(null);
+
+    try {
+      const formData = new FormData(event.currentTarget);
+      const result = await updateAction({}, formData);
+
+      if (result.error) {
+        setManualError(result.error);
+        return;
+      }
+      // updateCounter always returns the confirmed persisted value on success.
+      const next = result.value;
+      if (typeof next === "number") {
+        setCurrentCount(next);
+        setValue(String(next));
+      }
+    } catch {
+      setManualError("No se pudo actualizar el contador.");
+    } finally {
+      setManualPending(false);
+    }
+  }
+
+  const buttonBase =
+    "flex size-12 items-center justify-center rounded-2xl border bg-white text-neutral-700 shadow-sm transition select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/40 focus-visible:ring-offset-2 active:scale-[0.92] disabled:opacity-50 sm:size-14";
 
   return (
-    <div className="flex w-full max-w-sm flex-col gap-6 rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
+    <div className="flex w-full max-w-sm flex-col gap-6 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
       <div className="text-center">
         <h1 className="text-2xl font-bold text-neutral-900">{name}</h1>
       </div>
@@ -101,9 +181,43 @@ export default function CounterForm({
 
       <div className="text-center">
         <p className="mt-1 text-neutral-500">Clientes actualmente esperando</p>
-        <div className="mt-3 text-6xl font-black text-neutral-950 tabular-nums">
-          {count}
+
+        <div className="mt-4 flex items-center justify-center gap-2 sm:gap-4">
+          <button
+            type="button"
+            aria-label="Disminuir clientes"
+            title="Disminuir clientes"
+            disabled={quickPending}
+            onClick={() => applyQuick(-1)}
+            className={`${buttonBase} border-neutral-300 hover:border-neutral-400 hover:text-neutral-900`}
+          >
+            <ArrowGlyph direction="down" />
+          </button>
+
+          <div
+            aria-live="polite"
+            aria-atomic="true"
+            className="min-w-0 whitespace-nowrap text-5xl font-black leading-none text-neutral-950 tabular-nums sm:text-6xl"
+          >
+            {currentCount}
+          </div>
+
+          <button
+            type="button"
+            aria-label="Aumentar clientes"
+            title="Aumentar clientes"
+            disabled={quickPending}
+            onClick={() => applyQuick(1)}
+            className={`${buttonBase} border-neutral-300 hover:border-neutral-400 hover:text-neutral-900`}
+          >
+            <ArrowGlyph direction="up" />
+          </button>
         </div>
+
+        {quickError && (
+          <p className="mt-2 text-sm text-red-600">{quickError}</p>
+        )}
+
         <div className="mt-3 flex flex-col items-center gap-1">
           <p className="text-sm text-neutral-400">Tiempo estimado</p>
           <p className="text-xl font-bold text-neutral-800">
@@ -112,7 +226,7 @@ export default function CounterForm({
         </div>
       </div>
 
-      <form action={formAction} className="flex flex-col gap-6">
+      <form onSubmit={handleManualSubmit} className="flex flex-col gap-6">
         <label className="flex flex-col gap-2 text-left text-sm font-medium text-neutral-700">
           Nuevo número
           <input
@@ -125,11 +239,13 @@ export default function CounterForm({
           />
         </label>
 
-        {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+        {manualError && (
+          <p className="text-sm text-red-600">{manualError}</p>
+        )}
 
         <button
           type="submit"
-          disabled={pending}
+          disabled={manualPending}
           className="rounded-lg bg-neutral-900 px-4 py-3 text-base font-semibold text-white transition hover:bg-neutral-800 active:scale-[0.99] disabled:opacity-50"
         >
           Actualizar

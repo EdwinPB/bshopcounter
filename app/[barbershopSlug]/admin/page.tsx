@@ -67,6 +67,7 @@ export default async function AdminPage({
         <RememberAdminPath slug={barbershopSlug} />
         <CounterForm
           name={barbershop.name}
+          slug={barbershopSlug}
           count={counter?.value ?? 0}
           isOpen={barbershop.is_open}
           updateAction={updateCounter.bind(null, barbershopSlug)}

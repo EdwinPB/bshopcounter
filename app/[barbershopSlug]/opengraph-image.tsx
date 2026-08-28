@@ -150,9 +150,9 @@ export default async function Image({
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 22,
+              gap: 24,
               color: OFFWHITE,
-              fontSize: 52,
+              fontSize: 60,
               fontWeight: 800,
               letterSpacing: "0.01em",
               lineHeight: 1.05,
@@ -163,7 +163,7 @@ export default async function Image({
             <span
               style={{
                 color: RED,
-                fontSize: 54,
+                fontSize: 62,
                 fontWeight: 700,
                 display: "flex",
               }}
@@ -175,20 +175,20 @@ export default async function Image({
           {/* 2. Benefit message — the emotional focal point */}
           <div
             style={{
-              marginTop: 34,
+              marginTop: 36,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: 6,
+              gap: 8,
             }}
           >
             <div
               style={{
                 color: OFFWHITE,
-                fontSize: 40,
+                fontSize: 48,
                 fontWeight: 700,
                 letterSpacing: "0.02em",
-                lineHeight: 1.3,
+                lineHeight: 1.28,
                 display: "flex",
               }}
             >
@@ -197,10 +197,10 @@ export default async function Image({
             <div
               style={{
                 color: RED_EMPHASIS,
-                fontSize: 40,
+                fontSize: 48,
                 fontWeight: 700,
                 letterSpacing: "0.02em",
-                lineHeight: 1.3,
+                lineHeight: 1.28,
                 display: "flex",
               }}
             >
