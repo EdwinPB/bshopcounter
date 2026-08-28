@@ -1,10 +1,12 @@
 import { test, expect } from "@playwright/test";
+import { mutationGuardReason } from "./helpers/db-guard";
 
 test.use({ baseURL: "http://localhost:3000" });
 
 test("jornada flow: closed -> iniciar -> atendiendo -> finalizar -> closed", async ({
   page,
 }) => {
+  test.skip(Boolean(mutationGuardReason()), mutationGuardReason());
   // start closed + counter 5
   // public shows Cerrado
   await page.goto("/yepes");

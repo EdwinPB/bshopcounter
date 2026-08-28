@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
+import WhatsAppShareButton from "@/components/admin/WhatsAppShareButton";
 import { decrementCounter, incrementCounter } from "@/lib/actions";
 import { estimateWaitingMinutes, formatWaitTime } from "@/lib/waiting-time";
 
@@ -55,6 +56,7 @@ function ArrowGlyph({ direction }: { direction: "up" | "down" }) {
 export default function CounterForm({
   name,
   slug,
+  publicUrl,
   count,
   isOpen,
   updateAction,
@@ -64,6 +66,7 @@ export default function CounterForm({
 }: {
   name: string;
   slug: string;
+  publicUrl: string;
   count: number;
   isOpen: boolean;
   updateAction: (
@@ -223,6 +226,10 @@ export default function CounterForm({
           <p className="text-xl font-bold text-neutral-800">
             {formatWaitTime(estimatedMinutes)}
           </p>
+        </div>
+
+        <div className="mt-5">
+          <WhatsAppShareButton publicUrl={publicUrl} />
         </div>
       </div>
 

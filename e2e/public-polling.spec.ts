@@ -1,9 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { mutationGuardReason } from "./helpers/db-guard";
 
 test("public counter live-polls (5s) without page reload, tenant-isolated", async ({
   page,
   context,
 }) => {
+  test.skip(Boolean(mutationGuardReason()), mutationGuardReason());
   const countLocator = page.locator("span.tabular-nums");
 
   // 1 & 2: open /yepes, initial value rendered server-side is 5

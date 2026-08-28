@@ -19,6 +19,11 @@ export default async function AdminPage({
   const { barbershopSlug } = await params;
   const supabase = createServerSupabaseClient();
 
+  // Public share URL, built explicitly from the site base + tenant slug so the
+  // admin `/admin` path can never be shared accidentally.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
+  const publicUrl = `${siteUrl}/${barbershopSlug}`.replace(/\/+$/, "");
+
   const { data: barbershop, error: shopError } = await supabase
     .from("public_barbershops")
     .select("id, name, is_open")
@@ -68,6 +73,7 @@ export default async function AdminPage({
         <CounterForm
           name={barbershop.name}
           slug={barbershopSlug}
+          publicUrl={publicUrl}
           count={counter?.value ?? 0}
           isOpen={barbershop.is_open}
           updateAction={updateCounter.bind(null, barbershopSlug)}

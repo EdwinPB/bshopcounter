@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { mutationGuardReason } from "./helpers/db-guard";
 
 test.use({ baseURL: "http://localhost:3000" });
 
@@ -6,6 +7,7 @@ test("estimated waiting time updates via admin + polling, isolated", async ({
   page,
   request,
 }) => {
+  test.skip(Boolean(mutationGuardReason()), mutationGuardReason());
   // 1. Open /yepes
   await page.goto("/yepes");
 

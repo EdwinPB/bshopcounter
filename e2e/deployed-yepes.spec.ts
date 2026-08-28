@@ -1,8 +1,10 @@
 import { test, expect } from "@playwright/test";
+import { mutationGuardReason } from "./helpers/db-guard";
 
 test.use({ baseURL: "https://bshopcounter.vercel.app" });
 
 test("deployed: yepes login + counter update", async ({ page }) => {
+  test.skip(Boolean(mutationGuardReason()), mutationGuardReason());
   await page.goto("/yepes");
   await expect(page.locator("span.tabular-nums")).toHaveText("5");
 

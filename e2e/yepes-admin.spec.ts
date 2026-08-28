@@ -1,10 +1,12 @@
 import { test, expect } from "@playwright/test";
+import { mutationGuardReason } from "./helpers/db-guard";
 
 const BASE = "http://localhost:3000";
 
 test.use({ baseURL: BASE });
 
 test("Yepes admin flow end to end", async ({ page }) => {
+  test.skip(Boolean(mutationGuardReason()), mutationGuardReason());
   // 1. /yepes shows Yepes with a server-rendered counter value
   await page.goto("/yepes");
   await expect(page.getByText("Yepes").first()).toBeVisible();

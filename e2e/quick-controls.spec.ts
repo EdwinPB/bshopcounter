@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { mutationGuardReason } from "./helpers/db-guard";
 
 test.use({ baseURL: "http://localhost:3000" });
 
@@ -9,6 +10,7 @@ test("quick +/- controls update counter, sync input & estimate, persist, poll", 
   context,
   request,
 }) => {
+  test.skip(Boolean(mutationGuardReason()), mutationGuardReason());
   // 0. Login as Yepes admin.
   await page.goto("/yepes/admin");
   await page.getByLabel("Clave de acceso").fill("Yepes2026!");

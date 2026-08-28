@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { mutationGuardReason } from "./helpers/db-guard";
 
 test.use({ baseURL: "http://localhost:3000" });
 
@@ -9,6 +10,7 @@ for (const bp of [
   { name: "desktop", w: 1440, h: 900 },
 ]) {
   test(`public estimate no overflow @ ${bp.name}`, async ({ page }) => {
+    test.skip(Boolean(mutationGuardReason()), mutationGuardReason());
     await page.setViewportSize({ width: bp.w, height: bp.h });
 
     // ensure the shop is open so the estimate renders
