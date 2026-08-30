@@ -14,6 +14,7 @@ import {
 } from "@/lib/supabase/server";
 import { normalizeLabel, tenantMatches } from "@/lib/barbershop-resolver";
 import { estimateWaitingMinutes } from "@/lib/waiting-time";
+import { MAX_SHARE_MESSAGE } from "@/lib/share";
 
 const MAX_VALUE = 1000000;
 
@@ -275,4 +276,46 @@ export async function finishJornada(
   revalidatePath(`/${slug}/admin`);
 
   return {};
+}
+
+export async function updateShareMessage(
+  slug: string,
+  _prevState: { error?: string },
+  formData: FormData,
+): Promise<{ error?: string; message?: string | null }> {
+  const session = await getSession();
+  if (!session) {
+    return { error: "No autenticado." };
+  }
+  if (session.barbershopSlug !== slug) {
+    return { error: "No autenticado." };
+  }
+
+  const raw = formData.get("message");
+  let value: string | null = null;
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (trimmed.length > MAX_SHARE_MESSAGE) {
+      return {
+        error: `Mensaje demasiado largo (máx ${MAX_SHARE_MESSAGE} caracteres).`,
+      };
+    }
+    // Empty/whitespace resets to the default behavior (null -> default message).
+    value = trimmed.length > 0 ? trimmed : null;
+  }
+
+  const supabase = createServiceRoleSupabaseClient();
+
+  const { error } = await supabase
+    .from("barbershops")
+    .update({ share_message: value })
+    .eq("id", session.barbershopId);
+
+  if (error) {
+    return { error: "No se pudo guardar el mensaje." };
+  }
+
+  revalidatePath(`/${slug}/admin`);
+
+  return { message: value };
 }

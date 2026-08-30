@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:unit": "node --experimental-strip-types --no-warnings tests/waiting-time.test.ts"
+    "test:unit": "node --experimental-strip-types --no-warnings tests/waiting-time.test.ts && node --experimental-strip-types --no-warnings tests/share.test.ts && node --experimental-strip-types --no-warnings tests/tenant-branding.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

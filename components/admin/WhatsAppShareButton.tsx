@@ -1,17 +1,21 @@
 "use client";
 
+import { buildWhatsAppShareText } from "@/lib/share";
+
 export default function WhatsAppShareButton({
   publicUrl,
+  shareMessage,
 }: {
   publicUrl: string;
+  shareMessage?: string | null;
 }) {
-  // Only share a valid absolute http(s) URL. No explanatory text, no live
-  // counter — the OG preview already conveys the purpose. A relative "/slug"
-  // (or empty) value is never acceptable and disables sharing rather than
-  // leaking a broken link.
+  // Final text = <message>\n\n<absolute public URL>. The URL is appended by the
+  // app from getPublicTenantUrl (never typed by the admin), so /admin can never
+  // be shared. No live counter / estimate is included.
+  const finalText = buildWhatsAppShareText(shareMessage, publicUrl);
   const isAbsolute = /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(publicUrl);
   const waUrl = isAbsolute
-    ? `https://api.whatsapp.com/send?text=${encodeURIComponent(publicUrl)}`
+    ? `https://api.whatsapp.com/send?text=${encodeURIComponent(finalText)}`
     : "";
 
   return (
@@ -21,12 +25,12 @@ export default function WhatsAppShareButton({
       rel="noopener noreferrer"
       aria-label="Compartir en WhatsApp"
       aria-disabled={!isAbsolute}
-      className="flex w-full items-center justify-center gap-2 rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-base font-semibold text-green-800 transition hover:bg-green-100 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-700/40 focus-visible:ring-offset-2 disabled:opacity-50"
+      className="inline-flex items-center gap-1.5 rounded-md border border-green-200 bg-green-50/70 px-3.5 py-2.5 text-sm font-medium text-green-800 transition hover:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-700/40 focus-visible:ring-offset-1 disabled:opacity-50"
     >
       <svg
         viewBox="0 0 24 24"
-        width="18"
-        height="18"
+        width="15"
+        height="15"
         fill="currentColor"
         aria-hidden="true"
         className="pointer-events-none shrink-0"

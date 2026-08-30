@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { DEFAULT_SHARE_MESSAGE } from "../lib/share";
 
 test.use({ baseURL: "http://localhost:3000" });
 
@@ -23,7 +24,7 @@ function decode(href: string) {
 test("yepes admin shares public /yepes URL, never /admin", async ({ page }) => {
   const href = await loginAndGetShareHref(page, "yepes", "Yepes2026!");
 
-  // Standard WhatsApp share deep-link, open in new window.
+  // Standard WhatsApp share deep-link.
   expect(href).toContain("https://api.whatsapp.com/send?text=");
 
   // Encoded: colon + slashes are percent-encoded.
@@ -31,25 +32,32 @@ test("yepes admin shares public /yepes URL, never /admin", async ({ page }) => {
   expect(href).toContain("%2F");
   expect(href).not.toContain(" ");
 
-  // Exactly the absolute public URL — no explanatory message precedes it.
+  // Message = default invitation, blank line, absolute public URL.
   const message = decode(href);
-  expect(message).toBe(`https://bshopcounter.vercel.app/yepes`);
-  expect(message).toMatch(/^https:\/\//);
+  expect(message).toBe(
+    `${DEFAULT_SHARE_MESSAGE}\n\nhttps://bshopcounter.vercel.app/yepes`,
+  );
+  // Exactly one public URL, no /admin, no access key.
+  expect(message.match(/https:\/\/bshopcounter\.vercel\.app\/yepes/g)).toHaveLength(1);
   expect(message).not.toContain("/admin");
-  expect(message).not.toContain("Mira cuántas");
+  expect(message).not.toContain("Yepes2026!");
   expect(href).not.toContain("/admin");
-  expect(href).not.toContain("Yepes2026!");
 });
 
-test("barberia-central admin shares absolute public URL", async ({ page }) => {
+test("barberia-central admin shares public URL (default message)", async ({
+  page,
+}) => {
   const href = await loginAndGetShareHref(page, "barberia-central", "Polo2026!");
 
   expect(href).toContain("https://api.whatsapp.com/send?text=");
   const message = decode(href);
-  expect(message).toBe(`https://bshopcounter.vercel.app/barberia-central`);
-  expect(message).toMatch(/^https:\/\//);
+  expect(message).toBe(
+    `${DEFAULT_SHARE_MESSAGE}\n\nhttps://bshopcounter.vercel.app/barberia-central`,
+  );
+  expect(
+    message.match(/https:\/\/bshopcounter\.vercel\.app\/barberia-central/g),
+  ).toHaveLength(1);
   expect(message).not.toContain("/admin");
-  expect(message).not.toContain("Mira cuántas");
   expect(href).not.toContain("/admin");
 });
 
@@ -64,6 +72,10 @@ test("share button is a secondary action alongside counter controls", async ({
   // WhatsApp button present and secondary (below the counter area).
   const wa = page.locator('a[aria-label="Compartir en WhatsApp"]');
   await expect(wa).toBeVisible();
+  await expect(page.getByText("Compartir estado")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Personalizar mensaje" }),
+  ).toBeVisible();
 
   // Counter controls are rendered and enabled alongside it — verified WITHOUT
   // clicking them, so no production counter is mutated.

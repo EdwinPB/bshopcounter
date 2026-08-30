@@ -8,6 +8,7 @@ export type PublicTenant = {
   slug: string;
   name: string;
   is_open: boolean;
+  branding: unknown;
 };
 
 // Resolve a tenant by slug using the public tenant view.
@@ -17,7 +18,7 @@ export async function resolveTenant(slug: string): Promise<PublicTenant | null> 
 
   const { data: barbershop } = await supabase
     .from("public_barbershops")
-    .select("id, slug, name, is_open")
+    .select("id, slug, name, is_open, branding")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -30,6 +31,7 @@ export async function resolveTenant(slug: string): Promise<PublicTenant | null> 
     slug: barbershop.slug,
     name: barbershop.name,
     is_open: barbershop.is_open,
+    branding: barbershop.branding,
   };
 }
 

@@ -11,8 +11,12 @@ import {
   logout,
   startJornada,
   updateCounter,
+  updateShareMessage,
 } from "@/lib/actions";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import {
+  createServerSupabaseClient,
+  createServiceRoleSupabaseClient,
+} from "@/lib/supabase/server";
 
 export default async function AdminPage({
   params,
@@ -67,6 +71,17 @@ export default async function AdminPage({
     .eq("barbershop_id", barbershop.id)
     .maybeSingle();
 
+  // share_message is admin-only config: it is NOT in the public view. Read it
+  // server-side via the service-role client, scoped to the validated session's
+  // tenant (never a browser-provided id).
+  const shareSupabase = createServiceRoleSupabaseClient();
+  const { data: shareRow } = await shareSupabase
+    .from("barbershops")
+    .select("share_message")
+    .eq("id", session?.barbershopId ?? barbershop.id)
+    .maybeSingle();
+  const shareMessage = shareRow?.share_message ?? null;
+
   return (
     <BarberPoleBackground>
       <main className="flex flex-1 items-center justify-center p-8">
@@ -75,6 +90,8 @@ export default async function AdminPage({
           name={barbershop.name}
           slug={barbershopSlug}
           publicUrl={publicUrl}
+          shareMessage={shareMessage}
+          updateShareMessageAction={updateShareMessage.bind(null, barbershopSlug)}
           count={counter?.value ?? 0}
           isOpen={barbershop.is_open}
           updateAction={updateCounter.bind(null, barbershopSlug)}
