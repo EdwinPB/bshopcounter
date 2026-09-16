@@ -3,7 +3,7 @@ import {
   DEFAULT_SHARE_MESSAGE,
   MAX_SHARE_MESSAGE,
   normalizedShareMessage,
-  buildWhatsAppShareText,
+  buildWhatsAppShareHref,
 } from "../lib/share.ts";
 
 assert.equal(
@@ -12,40 +12,51 @@ assert.equal(
 );
 assert.equal(MAX_SHARE_MESSAGE, 300);
 
+// ---- Share message normalization (now OG/description content) ----
 // Blank / null / whitespace -> default.
 assert.equal(normalizedShareMessage(null), DEFAULT_SHARE_MESSAGE);
 assert.equal(normalizedShareMessage(""), DEFAULT_SHARE_MESSAGE);
 assert.equal(normalizedShareMessage("   \n "), DEFAULT_SHARE_MESSAGE);
-assert.equal(normalizedShareMessage("Hola, vengan"), "Hola, vengan");
+// Custom message is trimmed and preserved.
+assert.equal(normalizedShareMessage("  Hola, vengan  "), "Hola, vengan");
 
-// Exactly one public URL, message then blank line then absolute URL.
-assert.equal(
-  buildWhatsAppShareText(null, "https://bshopcounter.vercel.app/yepes"),
-  `${DEFAULT_SHARE_MESSAGE}\n\nhttps://bshopcounter.vercel.app/yepes`,
-);
-assert.equal(
-  buildWhatsAppShareText("     ", "https://bshopcounter.vercel.app/barberia-central"),
-  `${DEFAULT_SHARE_MESSAGE}\n\nhttps://bshopcounter.vercel.app/barberia-central`,
-);
-assert.equal(
-  buildWhatsAppShareText("Bienvenidos", "https://bshopcounter.vercel.app/dielem"),
-  "Bienvenidos\n\nhttps://bshopcounter.vercel.app/dielem",
-);
+// ---- WhatsApp share payload: ONLY the canonical public URL ----
+function decode(href: string): string {
+  return decodeURIComponent(href.split("?text=")[1] ?? "");
+}
 
-// Never contains /admin.
-for (const url of [
+const URLS = [
   "https://bshopcounter.vercel.app/yepes",
   "https://bshopcounter.vercel.app/barberia-central",
   "https://bshopcounter.vercel.app/dielem",
-]) {
-  assert.ok(!buildWhatsAppShareText(null, url).includes("/admin"), url);
+];
+
+for (const url of URLS) {
+  const href = buildWhatsAppShareHref(url);
+  assert.ok(href.startsWith("https://api.whatsapp.com/send?text="), href);
+
+  // Body is exactly the canonical URL — nothing else.
+  assert.equal(decode(href), url);
+
+  // Exactly one URL, no /admin, no share message, no access key.
+  assert.equal((decode(href).match(/https?:\/\//g) ?? []).length, 1);
+  assert.ok(!href.includes("/admin"));
+  assert.ok(!decode(href).includes(DEFAULT_SHARE_MESSAGE));
+  assert.ok(!decode(href).includes("Yepes2026!"));
+  assert.ok(!decode(href).includes("Polo2026!"));
 }
 
-// Contains exactly one occurrence of the public URL.
-const text = buildWhatsAppShareText(
-  "Mensaje",
-  "https://bshopcounter.vercel.app/yepes",
-);
-assert.equal(text.match(/https:\/\/bshopcounter\.vercel\.app\/yepes/g)!.length, 1);
+// A configured share_message is NOT part of the WhatsApp payload.
+const custom = buildWhatsAppShareHref("https://bshopcounter.vercel.app/dielem");
+assert.ok(!decode(custom).includes("Bienvenidos"));
+assert.equal(decode(custom), "https://bshopcounter.vercel.app/dielem");
+
+// Missing / invalid URL -> empty href (caller disables the link).
+assert.equal(buildWhatsAppShareHref(""), "");
+assert.equal(buildWhatsAppShareHref("   "), "");
+assert.equal(buildWhatsAppShareHref(null), "");
+assert.equal(buildWhatsAppShareHref(undefined), "");
+assert.equal(buildWhatsAppShareHref("/barberia-central"), "");
+assert.equal(buildWhatsAppShareHref("javascript:alert(1)"), "");
 
 console.log("share: all assertions passed");

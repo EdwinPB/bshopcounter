@@ -2,20 +2,26 @@ import type { Metadata } from "next";
 import PublicQueueView from "@/components/public/PublicQueueView";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { resolveEffectiveThemeKey } from "@/lib/public-themes";
-import { resolveTenantOrNotFound } from "@/lib/tenant";
+import { normalizedShareMessage } from "@/lib/share";
+import { getTenantShareMessage, resolveTenantOrNotFound } from "@/lib/tenant";
 
 export async function generateMetadata({
   params,
 }: PageProps<"/[barbershopSlug]">): Promise<Metadata> {
   const { barbershopSlug } = await params;
-  const tenant = await resolveTenantOrNotFound(barbershopSlug);
+  const [tenant, shareMessage] = await Promise.all([
+    resolveTenantOrNotFound(barbershopSlug),
+    // Admin-configured message (never from the public view). It is public
+    // social-preview copy, so it is safe to surface in og/twitter metadata.
+    getTenantShareMessage(barbershopSlug),
+  ]);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
   const ogUrl = `${siteUrl ?? ""}/${tenant.slug}`;
 
   const title = `${tenant.name} Peluquería`;
-  const description =
-    "Dale click para ver cuántas personas están esperando y el tiempo estimado antes de venir.";
+  // The tenant share message is the card description; blank/null -> default.
+  const description = normalizedShareMessage(shareMessage);
 
   return {
     title,

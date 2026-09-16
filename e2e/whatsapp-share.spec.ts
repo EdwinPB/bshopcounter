@@ -14,7 +14,7 @@ async function loginAndGetShareHref(
   await expect(page.getByText("Clientes actualmente esperando")).toBeVisible();
   // Expand the Compartir accordion row to reveal the WhatsApp button.
   await page.getByRole("button", { name: /Compartir/ }).click();
-  const wa = page.locator('a[aria-label="Compartir en WhatsApp"]');
+  const wa = page.locator('a[aria-label="Compartir por WhatsApp"]');
   await expect(wa).toBeVisible();
   return (await wa.getAttribute("href")) ?? "";
 }
@@ -23,7 +23,7 @@ function decode(href: string) {
   return decodeURIComponent((href.split("?text=")[1] ?? "").replace(/\+/g, " "));
 }
 
-test("yepes admin shares public /yepes URL, never /admin", async ({ page }) => {
+test("yepes admin shares ONLY the canonical /yepes URL", async ({ page }) => {
   const href = await loginAndGetShareHref(page, "yepes", "Yepes2026!");
 
   // Standard WhatsApp share deep-link.
@@ -34,31 +34,29 @@ test("yepes admin shares public /yepes URL, never /admin", async ({ page }) => {
   expect(href).toContain("%2F");
   expect(href).not.toContain(" ");
 
-  // Message = default invitation, blank line, absolute public URL.
+  // Message body is EXACTLY the canonical public URL — no share message text.
   const message = decode(href);
-  expect(message).toBe(
-    `${DEFAULT_SHARE_MESSAGE}\n\nhttps://bshopcounter.vercel.app/yepes`,
-  );
-  // Exactly one public URL, no /admin, no access key.
+  expect(message).toBe("https://bshopcounter.vercel.app/yepes");
+  // Exactly one public URL, no /admin, no access key, no share message.
   expect(message.match(/https:\/\/bshopcounter\.vercel\.app\/yepes/g)).toHaveLength(1);
+  expect(message).not.toContain(DEFAULT_SHARE_MESSAGE);
   expect(message).not.toContain("/admin");
   expect(message).not.toContain("Yepes2026!");
   expect(href).not.toContain("/admin");
 });
 
-test("barberia-central admin shares public URL (default message)", async ({
+test("barberia-central admin shares ONLY the canonical public URL", async ({
   page,
 }) => {
   const href = await loginAndGetShareHref(page, "barberia-central", "Polo2026!");
 
   expect(href).toContain("https://api.whatsapp.com/send?text=");
   const message = decode(href);
-  expect(message).toBe(
-    `${DEFAULT_SHARE_MESSAGE}\n\nhttps://bshopcounter.vercel.app/barberia-central`,
-  );
+  expect(message).toBe("https://bshopcounter.vercel.app/barberia-central");
   expect(
     message.match(/https:\/\/bshopcounter\.vercel\.app\/barberia-central/g),
   ).toHaveLength(1);
+  expect(message).not.toContain(DEFAULT_SHARE_MESSAGE);
   expect(message).not.toContain("/admin");
   expect(href).not.toContain("/admin");
 });
@@ -90,7 +88,7 @@ test("Compartir shares from inside its accordion row", async ({
   await compartir.click();
   await expect(compartir).toHaveAttribute("aria-expanded", "true");
 
-  const wa = page.locator('a[aria-label="Compartir en WhatsApp"]');
+  const wa = page.locator('a[aria-label="Compartir por WhatsApp"]');
   await expect(wa).toBeVisible();
   expect(
     ((await wa.getAttribute("href")) ?? "").startsWith(

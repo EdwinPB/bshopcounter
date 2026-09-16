@@ -1,17 +1,22 @@
 import type { CSSProperties } from "react";
-import type { Theme } from "@/lib/tenant-branding";
+import type { SocialTheme } from "@/lib/social-share";
 
-function BarberBand({
+// Long share messages are clamped so the subtitle can never dominate the card.
+const MAX_CARD_MESSAGE = 240;
+
+// Rotated barber-pole style stripe band (bar / gap / bar / gap ...). Used by the
+// default and heritage decorations. Explicit elements only — no repeating
+// gradients — so it renders in Satori.
+function StripeBand({
   style,
-  accent,
-  accentSecondary,
-  text,
+  a,
+  b,
 }: {
   style: CSSProperties;
-  accent: string;
-  accentSecondary: string;
-  text: string;
+  a: string;
+  b: string;
 }) {
+  const widths = [14, 12, 14, 12, 14, 12, 14, 12];
   return (
     <div
       style={{
@@ -23,34 +28,219 @@ function BarberBand({
         ...style,
       }}
     >
-      <div style={{ width: 14, height: "100%", background: accentSecondary }} />
-      <div style={{ width: 12, height: "100%", background: text }} />
-      <div style={{ width: 14, height: "100%", background: accent }} />
-      <div style={{ width: 12, height: "100%", background: text }} />
-      <div style={{ width: 14, height: "100%", background: accentSecondary }} />
-      <div style={{ width: 12, height: "100%", background: text }} />
-      <div style={{ width: 14, height: "100%", background: accent }} />
-      <div style={{ width: 12, height: "100%", background: text }} />
+      {widths.map((w, i) => (
+        <div
+          key={i}
+          style={{
+            width: w,
+            height: "100%",
+            background: i % 2 === 0 ? a : b,
+          }}
+        />
+      ))}
     </div>
+  );
+}
+
+// Four hairline corner ticks (borders only).
+function CornerTicks({
+  color,
+  inset = 22,
+  size = 54,
+}: {
+  color: string;
+  inset?: number;
+  size?: number;
+}) {
+  const base: CSSProperties = {
+    position: "absolute",
+    width: size,
+    height: size,
+    borderStyle: "solid",
+    borderWidth: 0,
+    borderColor: color,
+  };
+  return (
+    <>
+      <div style={{ ...base, top: inset, left: inset, borderTopWidth: 2, borderLeftWidth: 2 }} />
+      <div style={{ ...base, top: inset, right: inset, borderTopWidth: 2, borderRightWidth: 2 }} />
+      <div style={{ ...base, bottom: inset, left: inset, borderBottomWidth: 2, borderLeftWidth: 2 }} />
+      <div style={{ ...base, bottom: inset, right: inset, borderBottomWidth: 2, borderRightWidth: 2 }} />
+    </>
+  );
+}
+
+// Theme-aware, Satori-safe decoration. Every variant is driven by the theme
+// tokens resolved in lib/social-share.ts — no colors are hardcoded here.
+function CardDecor({ theme }: { theme: SocialTheme }) {
+  const { accent, accentSecondary, border, decorStyle } = theme;
+
+  if (decorStyle === "executive-geometry") {
+    return (
+      <>
+        <div
+          style={{
+            position: "absolute",
+            top: -120,
+            right: -120,
+            width: 360,
+            height: 360,
+            border: `2px solid ${accent}`,
+            opacity: 0.35,
+            transform: "rotate(45deg)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: -140,
+            left: -140,
+            width: 420,
+            height: 420,
+            border: `2px solid ${border}`,
+            transform: "rotate(45deg)",
+          }}
+        />
+        <CornerTicks color={accent} inset={22} size={50} />
+      </>
+    );
+  }
+
+  if (decorStyle === "gold-luxury") {
+    return (
+      <>
+        <div
+          style={{
+            position: "absolute",
+            top: 45,
+            left: 310,
+            width: 580,
+            height: 580,
+            borderRadius: 999,
+            border: `3px solid ${accent}`,
+            opacity: 0.28,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: 105,
+            left: 370,
+            width: 460,
+            height: 460,
+            borderRadius: 999,
+            border: `2px solid ${accent}`,
+            opacity: 0.16,
+          }}
+        />
+        <CornerTicks color={accent} inset={24} size={52} />
+      </>
+    );
+  }
+
+  if (decorStyle === "atelier") {
+    return (
+      <>
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: 260,
+            background: `radial-gradient(ellipse at 50% 0%, ${accent}33 0%, ${accent}00 70%)`,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 420,
+            width: 360,
+            height: 3,
+            background: accent,
+            opacity: 0.5,
+          }}
+        />
+      </>
+    );
+  }
+
+  if (decorStyle === "technical-grid") {
+    return (
+      <>
+        <StripeBand
+          style={{ top: -40, right: -90, width: 300, height: 200, opacity: 0.18 }}
+          a={accent}
+          b={accentSecondary}
+        />
+        <StripeBand
+          style={{ bottom: -40, left: -90, width: 300, height: 200, opacity: 0.18 }}
+          a={accent}
+          b={accentSecondary}
+        />
+        <CornerTicks color={accent} inset={22} size={48} />
+      </>
+    );
+  }
+
+  if (decorStyle === "heritage-stripes") {
+    return (
+      <>
+        <StripeBand
+          style={{ top: -34, left: -80, width: 260, height: 160, opacity: 0.9 }}
+          a={accent}
+          b={accentSecondary}
+        />
+        <StripeBand
+          style={{ bottom: -34, right: -80, width: 260, height: 160, opacity: 0.9 }}
+          a={accent}
+          b={accentSecondary}
+        />
+      </>
+    );
+  }
+
+  // default: extremely subtle red/blue barber accents in the corners.
+  return (
+    <>
+      <StripeBand
+        style={{ top: -40, left: -80, width: 260, height: 170, opacity: 0.14 }}
+        a={accent}
+        b={accentSecondary}
+      />
+      <StripeBand
+        style={{ bottom: -40, right: -80, width: 260, height: 170, opacity: 0.14 }}
+        a={accent}
+        b={accentSecondary}
+      />
+    </>
   );
 }
 
 export default function SocialCard({
   name,
+  count,
+  isOpen,
+  message,
   theme,
 }: {
   name: string;
-  theme: Theme;
+  count: number;
+  isOpen: boolean;
+  message: string;
+  theme: SocialTheme;
 }) {
-  const cta = "¡DALE CLICK AQUÍ!";
-  const benefit1 = "PARA VER CUÁNTAS PERSONAS";
-  const benefit2 = "FALTAN ANTES DE VENIR";
-  const showTagline =
-    theme.kind === "custom" &&
-    theme.tagline &&
-    theme.tagline.trim().length > 0 &&
-    theme.tagline.trim().toUpperCase() !== name;
-  const nameColor = theme.kind === "default" ? "#ffffff" : theme.text;
+  const queueLabel = !isOpen
+    ? "Cerrado ahora"
+    : count === 1
+      ? "1 persona esperando"
+      : `${count} personas esperando`;
+
+  const displayedMessage =
+    message.length > MAX_CARD_MESSAGE
+      ? `${message.slice(0, MAX_CARD_MESSAGE - 1).trimEnd()}…`
+      : message;
 
   return (
     <div
@@ -67,40 +257,107 @@ export default function SocialCard({
         fontFamily: "sans-serif",
       }}
     >
-      {/* Barber-pole accents, mostly around edges/corners */}
-      <BarberBand
-        style={{ top: -30, left: -70, width: 240, height: 150, opacity: 0.2 }}
-        accent={theme.accent}
-        accentSecondary={theme.accentSecondary}
-        text={theme.text}
-      />
-      <BarberBand
-        style={{ bottom: -30, right: -70, width: 240, height: 150, opacity: 0.2 }}
-        accent={theme.accent}
-        accentSecondary={theme.accentSecondary}
-        text={theme.text}
-      />
+      <CardDecor theme={theme} />
 
-      {/* Soft radial light in the center to lift content and add depth */}
+      {/* Top hairline in the theme accent */}
       <div
         style={{
           position: "absolute",
-          inset: 0,
-          background:
-            "radial-gradient(ellipse at 50% 42%, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 55%)",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: 3,
+          background: `linear-gradient(90deg, ${theme.bgStart} 0%, ${theme.accent} 50%, ${theme.bgStart} 100%)`,
         }}
       />
+
+      {/* Compact call to action */}
+      <div
+        style={{
+          position: "absolute",
+          top: 44,
+          left: 0,
+          width: "100%",
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 18,
+          color: theme.accent,
+          fontSize: 30,
+          fontWeight: 700,
+          letterSpacing: "0.18em",
+        }}
+      >
+        ¡DALE CLICK AQUÍ!
+        <span style={{ display: "flex", fontSize: 34 }}>→</span>
+      </div>
+
+      {/* Central content: name, live queue, tenant share message */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+          width: 960,
+          maxWidth: 960,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 76,
+            fontWeight: 700,
+            letterSpacing: "0.06em",
+            lineHeight: 1.1,
+            color: theme.nameColor,
+            display: "flex",
+            maxWidth: 940,
+          }}
+        >
+          {name}
+        </div>
+
+        <div
+          style={{
+            marginTop: 22,
+            fontSize: 44,
+            fontWeight: 800,
+            letterSpacing: "0.02em",
+            color: theme.accent,
+            display: "flex",
+          }}
+        >
+          {queueLabel}
+        </div>
+
+        <div
+          style={{
+            marginTop: 26,
+            fontSize: 30,
+            fontWeight: 500,
+            lineHeight: 1.4,
+            letterSpacing: "0.01em",
+            color: theme.muted,
+            display: "flex",
+            maxWidth: 880,
+          }}
+        >
+          {displayedMessage}
+        </div>
+      </div>
 
       {/* Subtle bottom-right brand block */}
       <div
         style={{
           position: "absolute",
           right: 64,
-          bottom: 56,
+          bottom: 48,
           display: "flex",
           alignItems: "center",
           gap: 10,
-          color: theme.brandText,
+          color: theme.muted,
           fontSize: 22,
           letterSpacing: "0.22em",
           opacity: 0.8,
@@ -116,125 +373,6 @@ export default function SocialCard({
           }}
         />
         BARBERSHOP COUNTER
-      </div>
-
-      {/* Central content */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center",
-          width: 900,
-          zIndex: 2,
-        }}
-      >
-        {/* 1. CTA — the immediate action */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 24,
-            color: theme.text,
-            fontSize: 60,
-            fontWeight: 800,
-            letterSpacing: "0.01em",
-            lineHeight: 1.05,
-            textAlign: "center",
-          }}
-        >
-          {cta}
-          <span
-            style={{
-              color: theme.accent,
-              fontSize: 62,
-              fontWeight: 700,
-              display: "flex",
-            }}
-          >
-            →
-          </span>
-        </div>
-
-        {/* 2. Benefit message — the emotional focal point */}
-        <div
-          style={{
-            marginTop: 36,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          <div
-            style={{
-              color: theme.text,
-              fontSize: 48,
-              fontWeight: 700,
-              letterSpacing: "0.02em",
-              lineHeight: 1.28,
-              display: "flex",
-            }}
-          >
-            {benefit1}
-          </div>
-          <div
-            style={{
-              color: theme.accentEmphasis,
-              fontSize: 48,
-              fontWeight: 700,
-              letterSpacing: "0.02em",
-              lineHeight: 1.28,
-              display: "flex",
-            }}
-          >
-            {benefit2}
-          </div>
-        </div>
-
-        {/* Thin accent divider */}
-        <div
-          style={{
-            marginTop: 40,
-            marginBottom: 28,
-            width: 120,
-            height: 5,
-            borderRadius: 999,
-            background: `linear-gradient(90deg, ${theme.accent}, ${theme.accentSecondary})`,
-            display: "flex",
-          }}
-        />
-
-        {/* 3. Tenant identity — the wordmark/name serves as the logo */}
-        <div
-          style={{
-            fontSize: 68,
-            fontWeight: 600,
-            letterSpacing: "0.08em",
-            lineHeight: 1.1,
-            color: nameColor,
-            display: "flex",
-            maxWidth: 900,
-          }}
-        >
-          {name}
-        </div>
-
-        {showTagline && (
-          <div
-            style={{
-              marginTop: 14,
-              fontSize: 30,
-              fontWeight: 500,
-              letterSpacing: "0.3em",
-              color: theme.accentEmphasis,
-              display: "flex",
-            }}
-          >
-            {theme.tagline}
-          </div>
-        )}
       </div>
     </div>
   );
