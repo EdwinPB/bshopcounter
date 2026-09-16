@@ -17,7 +17,7 @@ test("jornada flow: closed -> iniciar -> atendiendo -> finalizar -> closed", asy
   await page.goto("/yepes/admin");
   await page.getByLabel("Clave de acceso").fill("Yepes2026!");
   await page.getByRole("button", { name: "Ingresar" }).click();
-  await expect(page.getByText("Nuevo número")).toBeVisible();
+  await expect(page.getByText("Clientes actualmente esperando")).toBeVisible();
 
   // admin shows Cerrado + Iniciar jornada
   await expect(page.getByText("🔴 Cerrado")).toBeVisible();

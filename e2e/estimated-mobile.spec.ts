@@ -17,7 +17,7 @@ for (const bp of [
     await page.goto("/yepes/admin");
     await page.getByLabel("Clave de acceso").fill("Yepes2026!");
     await page.getByRole("button", { name: "Ingresar" }).click();
-    await expect(page.getByText("Nuevo número")).toBeVisible();
+    await expect(page.getByText("Clientes actualmente esperando")).toBeVisible();
     const openBtn = page.getByRole("button", { name: "🟢 Iniciar jornada" });
     if (await openBtn.isVisible().catch(() => false)) {
       await openBtn.click();

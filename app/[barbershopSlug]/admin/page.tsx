@@ -17,6 +17,7 @@ import {
   createServerSupabaseClient,
   createServiceRoleSupabaseClient,
 } from "@/lib/supabase/server";
+import { DEFAULT_PUBLIC_THEME_KEY } from "@/lib/public-themes";
 
 export default async function AdminPage({
   params,
@@ -77,10 +78,11 @@ export default async function AdminPage({
   const shareSupabase = createServiceRoleSupabaseClient();
   const { data: shareRow } = await shareSupabase
     .from("barbershops")
-    .select("share_message")
+    .select("share_message, theme_key")
     .eq("id", session?.barbershopId ?? barbershop.id)
     .maybeSingle();
   const shareMessage = shareRow?.share_message ?? null;
+  const currentThemeKey = shareRow?.theme_key ?? DEFAULT_PUBLIC_THEME_KEY;
 
   return (
     <BarberPoleBackground>
@@ -94,6 +96,7 @@ export default async function AdminPage({
           updateShareMessageAction={updateShareMessage.bind(null, barbershopSlug)}
           count={counter?.value ?? 0}
           isOpen={barbershop.is_open}
+          currentThemeKey={currentThemeKey}
           updateAction={updateCounter.bind(null, barbershopSlug)}
           startJornadaAction={startJornada.bind(null, barbershopSlug)}
           finishJornadaAction={finishJornada.bind(null, barbershopSlug)}

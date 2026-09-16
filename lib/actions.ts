@@ -14,6 +14,7 @@ import {
 } from "@/lib/supabase/server";
 import { normalizeLabel, tenantMatches } from "@/lib/barbershop-resolver";
 import { estimateWaitingMinutes } from "@/lib/waiting-time";
+import { isPublicThemeKey } from "@/lib/public-themes";
 import { MAX_SHARE_MESSAGE } from "@/lib/share";
 
 const MAX_VALUE = 1000000;
@@ -318,4 +319,47 @@ export async function updateShareMessage(
   revalidatePath(`/${slug}/admin`);
 
   return { message: value };
+}
+
+// -----------------------------------------------------------------------------
+// Public-page theme selection.
+//
+// Session-validated, tenant-scoped. The browser never supplies a trusted
+// barbershop_id — ownership comes from the HMAC session (`session.barbershopId`),
+// and the update is applied with the server-only service-role client. No public
+// endpoint can mutate the theme.
+// -----------------------------------------------------------------------------
+
+export type UpdateThemeResult = { ok: true } | { ok: false; error: string };
+
+export async function updateTenantTheme(
+  slug: string,
+  themeKey: string,
+): Promise<UpdateThemeResult> {
+  const session = await getSession();
+  if (!session) {
+    return { ok: false, error: "No autenticado." };
+  }
+  if (session.barbershopSlug !== slug) {
+    return { ok: false, error: "No autenticado." };
+  }
+  if (!isPublicThemeKey(themeKey)) {
+    return { ok: false, error: "Tema inválido." };
+  }
+
+  const supabase = createServiceRoleSupabaseClient();
+
+  const { error } = await supabase
+    .from("barbershops")
+    .update({ theme_key: themeKey })
+    .eq("id", session.barbershopId);
+
+  if (error) {
+    return { ok: false, error: "No se pudo guardar el tema." };
+  }
+
+  revalidatePath(`/${slug}`);
+  revalidatePath(`/${slug}/admin`);
+
+  return { ok: true };
 }

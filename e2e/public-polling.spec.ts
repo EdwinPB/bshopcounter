@@ -23,7 +23,7 @@ test("public counter live-polls (5s) without page reload, tenant-isolated", asyn
   await adminPage.goto("/yepes/admin");
   await adminPage.getByLabel("Clave de acceso").fill("Yepes2026!");
   await adminPage.getByRole("button", { name: "Ingresar" }).click();
-  await expect(adminPage.getByText("Nuevo número")).toBeVisible();
+  await expect(adminPage.getByText("Clientes actualmente esperando")).toBeVisible();
   await adminPage.locator('input[name="value"]').fill("6");
   await adminPage.getByRole("button", { name: "Actualizar" }).click();
 

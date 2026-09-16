@@ -56,7 +56,7 @@ test("4. Successful login at /yepes/admin saves preference", async ({
   await page.goto("/yepes/admin");
   await page.getByLabel("Clave de acceso").fill("Yepes2026!");
   await page.getByRole("button", { name: "Ingresar" }).click();
-  await expect(page.getByText("Nuevo número")).toBeVisible();
+  await expect(page.getByText("Clientes actualmente esperando")).toBeVisible();
 
   expect(await storedPref(page)).toBe("/yepes/admin");
 });
@@ -68,7 +68,7 @@ test("5. Successful login at /barberia-central/admin replaces preference", async
   await page.goto("/barberia-central/admin");
   await page.getByLabel("Clave de acceso").fill("Polo2026!");
   await page.getByRole("button", { name: "Ingresar" }).click();
-  await expect(page.getByText("Nuevo número")).toBeVisible();
+  await expect(page.getByText("Clientes actualmente esperando")).toBeVisible();
 
   expect(await storedPref(page)).toBe("/barberia-central/admin");
 });

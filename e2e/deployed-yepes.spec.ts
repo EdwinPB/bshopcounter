@@ -11,7 +11,7 @@ test("deployed: yepes login + counter update", async ({ page }) => {
   await page.goto("/yepes/admin");
   await page.getByLabel("Clave de acceso").fill("Yepes2026!");
   await page.getByRole("button", { name: "Ingresar" }).click();
-  await expect(page.getByText("Nuevo número")).toBeVisible();
+  await expect(page.getByText("Clientes actualmente esperando")).toBeVisible();
 
   await page.locator('input[name="value"]').fill("5");
   await page.getByRole("button", { name: "Actualizar" }).click();

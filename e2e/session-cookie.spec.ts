@@ -4,7 +4,7 @@ test("session cookie security attributes", async ({ page, context }) => {
   await page.goto("/yepes/admin");
   await page.getByLabel("Clave de acceso").fill("Yepes2026!");
   await page.getByRole("button", { name: "Ingresar" }).click();
-  await expect(page.getByText("Nuevo número")).toBeVisible();
+  await expect(page.getByText("Clientes actualmente esperando")).toBeVisible();
 
   const cookies = await context.cookies();
   const session = cookies.find((c) => c.name === "bshop_session");

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import Counter from "@/components/counter/Counter";
-import BarberPoleBackground from "@/components/ui/BarberPoleBackground";
+import PublicQueueView from "@/components/public/PublicQueueView";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { resolveEffectiveThemeKey } from "@/lib/public-themes";
 import { resolveTenantOrNotFound } from "@/lib/tenant";
 
 export async function generateMetadata({
@@ -57,34 +56,28 @@ export async function generateMetadata({
 
 export default async function BarbershopPage({
   params,
+  searchParams,
 }: PageProps<"/[barbershopSlug]">) {
   const { barbershopSlug } = await params;
+  const { previewTheme } = (await searchParams) ?? {};
+  const tenant = await resolveTenantOrNotFound(barbershopSlug);
+
+  // Developer tool only: in development `?previewTheme=<key>` can render any
+  // bundled theme WITHOUT persisting anything. Production ignores it entirely
+  // and always uses the tenant's persisted theme_key. Resolved on the server so
+  // the first paint already has the correct theme (no hydration flash).
+  const themeKey = resolveEffectiveThemeKey({
+    previewTheme,
+    persistedThemeKey: tenant.theme_key,
+    isDevelopment: process.env.NODE_ENV === "development",
+  });
+
   const supabase = createServerSupabaseClient();
-
-  const { data: barbershop, error: shopError } = await supabase
-    .from("public_barbershops")
-    .select("id, name, is_open")
-    .eq("slug", barbershopSlug)
-    .maybeSingle();
-
-  if (shopError) {
-    return (
-      <main className="flex flex-1 items-center justify-center p-8">
-        <p className="text-neutral-600 text-lg">
-          No se pudo cargar la barbería.
-        </p>
-      </main>
-    );
-  }
-
-  if (!barbershop) {
-    notFound();
-  }
 
   const { data: counter, error: counterError } = await supabase
     .from("counters")
     .select("value")
-    .eq("barbershop_id", barbershop.id)
+    .eq("barbershop_id", tenant.id)
     .maybeSingle();
 
   if (counterError) {
@@ -97,16 +90,22 @@ export default async function BarbershopPage({
     );
   }
 
+  const branding =
+    typeof tenant.branding === "object" &&
+    tenant.branding !== null &&
+    "tagline" in tenant.branding
+      ? (tenant.branding as { tagline?: unknown }).tagline
+      : undefined;
+  const tagline = typeof branding === "string" ? branding : null;
+
   return (
-    <BarberPoleBackground>
-      <main className="flex flex-1 items-center justify-center p-8">
-        <Counter
-          name={barbershop.name}
-          count={counter?.value ?? 0}
-          isOpen={barbershop.is_open}
-          slug={barbershopSlug}
-        />
-      </main>
-    </BarberPoleBackground>
+    <PublicQueueView
+      name={tenant.name}
+      tagline={tagline}
+      themeKey={themeKey}
+      initialCount={counter?.value ?? 0}
+      isOpen={tenant.is_open}
+      slug={barbershopSlug}
+    />
   );
 }

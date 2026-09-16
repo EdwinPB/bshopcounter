@@ -9,10 +9,9 @@
 //   and never cached, so session data is never stored offline.
 // - Serves fresh data by default; offline is best-effort for the shell only.
 
-const CACHE_NAME = "bshopcounter-shell-v1";
+const CACHE_NAME = "bshopcounter-shell-v2";
 const PRECACHE = [
   "/",
-  "/barber-pole-bg.svg",
   "/pwa-icon-192.png",
   "/pwa-icon-512.png",
   "/pwa-icon-maskable-512.png",
@@ -44,7 +43,6 @@ self.addEventListener("activate", (event) => {
 
 function isShellAsset(url) {
   return (
-    url.pathname === "/barber-pole-bg.svg" ||
     url.pathname.startsWith("/pwa-icon-") ||
     url.pathname === "/apple-touch-icon.png" ||
     url.pathname.startsWith("/_next/static/")

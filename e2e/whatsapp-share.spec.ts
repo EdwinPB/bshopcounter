@@ -11,7 +11,9 @@ async function loginAndGetShareHref(
   await page.goto(`/${slug}/admin`);
   await page.getByLabel("Clave de acceso").fill(key);
   await page.getByRole("button", { name: "Ingresar" }).click();
-  await expect(page.getByText("Nuevo número")).toBeVisible();
+  await expect(page.getByText("Clientes actualmente esperando")).toBeVisible();
+  // Expand the Compartir accordion row to reveal the WhatsApp button.
+  await page.getByRole("button", { name: /Compartir/ }).click();
   const wa = page.locator('a[aria-label="Compartir en WhatsApp"]');
   await expect(wa).toBeVisible();
   return (await wa.getAttribute("href")) ?? "";
@@ -61,26 +63,56 @@ test("barberia-central admin shares public URL (default message)", async ({
   expect(href).not.toContain("/admin");
 });
 
-test("share button is a secondary action alongside counter controls", async ({
+test("Compartir shares from inside its accordion row", async ({
   page,
+  context,
 }) => {
   await page.goto("/yepes/admin");
   await page.getByLabel("Clave de acceso").fill("Yepes2026!");
   await page.getByRole("button", { name: "Ingresar" }).click();
-  await expect(page.getByText("Nuevo número")).toBeVisible();
+  await expect(page.getByText("Clientes actualmente esperando")).toBeVisible();
 
-  // WhatsApp button present and secondary (below the counter area).
+  // The four accordion rows are present and compact.
+  await expect(
+    page.getByRole("button", { name: /Actualizar número/ }),
+  ).toBeVisible();
+  const compartir = page.getByRole("button", { name: /Compartir/ });
+  await expect(compartir).toBeVisible();
+  await expect(page.getByRole("button", { name: /Apariencia/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Mensaje/ })).toBeVisible();
+
+  // Row click only expands — it must NOT open WhatsApp itself.
+  await expect(compartir).toHaveAttribute("aria-expanded", "false");
+  let popupOpened = false;
+  context.on("page", () => {
+    popupOpened = true;
+  });
+  await compartir.click();
+  await expect(compartir).toHaveAttribute("aria-expanded", "true");
+
   const wa = page.locator('a[aria-label="Compartir en WhatsApp"]');
   await expect(wa).toBeVisible();
-  await expect(page.getByText("Compartir estado")).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Personalizar mensaje" }),
-  ).toBeVisible();
+  expect(
+    ((await wa.getAttribute("href")) ?? "").startsWith(
+      "https://api.whatsapp.com/send?text=",
+    ),
+  ).toBe(true);
+  await page.waitForTimeout(250);
+  expect(popupOpened).toBe(false);
 
-  // Counter controls are rendered and enabled alongside it — verified WITHOUT
+  // Counter controls are rendered and enabled alongside — verified WITHOUT
   // clicking them, so no production counter is mutated.
-  await expect(page.getByRole("button", { name: "Aumentar clientes" })).toBeEnabled();
-  await expect(page.getByRole("button", { name: "Disminuir clientes" })).toBeEnabled();
-  await expect(page.getByRole("button", { name: "Actualizar" })).toBeEnabled();
-  await expect(page.locator('input[name="value"]')).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "Aumentar clientes" }),
+  ).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "Disminuir clientes" }),
+  ).toBeEnabled();
+
+  // The manual counter input lives behind the "Actualizar número" accordion.
+  await page.getByRole("button", { name: /Actualizar número/ }).click();
+  await expect(page.locator('input[name="value"]')).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Actualizar", exact: true }),
+  ).toBeEnabled();
 });

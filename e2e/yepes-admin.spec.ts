@@ -30,7 +30,7 @@ test("Yepes admin flow end to end", async ({ page }) => {
     page.getByRole("heading", { name: "Yepes" }),
   ).toBeVisible();
   await expect(page.getByText("Clientes actualmente esperando")).toBeVisible();
-  await expect(page.getByText("Nuevo número")).toBeVisible();
+  await expect(page.getByText("Clientes actualmente esperando")).toBeVisible();
   await expect(page.getByRole("button", { name: "Actualizar" })).toBeVisible();
 
   // 4. Set counter to an arbitrary value (initial + 1, or 1 to track state)
@@ -61,12 +61,12 @@ test("Yepes admin flow end to end", async ({ page }) => {
   await page.goto("/yepes/admin");
   await page.getByLabel("Clave de acceso").fill("Yepes2026!");
   await page.getByRole("button", { name: "Ingresar" }).click();
-  await expect(page.getByText("Nuevo número")).toBeVisible(); // authed as yepes
+  await expect(page.getByText("Clientes actualmente esperando")).toBeVisible(); // authed as yepes
   // now attempt to access barberia-central admin with this yepes session
   await page.goto("/barberia-central/admin");
   // must NOT be authorized -> shows access key form (LoginForm), not the counter UI
   await expect(page.getByLabel("Clave de acceso")).toBeVisible();
   await expect(page.getByRole("button", { name: "Ingresar" })).toBeVisible();
   // ensure NO counter mutation controls are shown for central
-  await expect(page.getByText("Nuevo número")).toHaveCount(0);
+  await expect(page.getByText("Clientes actualmente esperando")).toHaveCount(0);
 });

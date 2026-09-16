@@ -15,7 +15,7 @@ test("quick +/- controls update counter, sync input & estimate, persist, poll", 
   await page.goto("/yepes/admin");
   await page.getByLabel("Clave de acceso").fill("Yepes2026!");
   await page.getByRole("button", { name: "Ingresar" }).click();
-  await expect(page.getByText("Nuevo número")).toBeVisible();
+  await expect(page.getByText("Clientes actualmente esperando")).toBeVisible();
 
   // Quick buttons are present with accessible labels.
   const inc = page.getByRole("button", { name: "Aumentar clientes" });
@@ -109,7 +109,7 @@ test("quick controls do not overflow at mobile viewports", async ({ page }) => {
   await page.goto("/yepes/admin");
   await page.getByLabel("Clave de acceso").fill("Yepes2026!");
   await page.getByRole("button", { name: "Ingresar" }).click();
-  await expect(page.getByText("Nuevo número")).toBeVisible();
+  await expect(page.getByText("Clientes actualmente esperando")).toBeVisible();
 
   for (const width of [320, 375, 414]) {
     await page.setViewportSize({ width, height: 800 });
