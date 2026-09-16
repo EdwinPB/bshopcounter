@@ -58,3 +58,40 @@ test("root finder: Enter key defaults to Ver estado", async ({ page }) => {
   await page.getByPlaceholder("Ej. Yepes").press("Enter");
   await expect(page).toHaveURL(/\/yepes$/);
 });
+
+// Read-only: navigation only. Never touches counter/jornada/theme/share/branding.
+test("root finder: mobile 375px, return to root, no console/hydration errors", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+
+  const consoleErrors: string[] = [];
+  page.on("console", (m) => {
+    if (m.type() === "error") consoleErrors.push(m.text());
+  });
+  page.on("pageerror", (e) => consoleErrors.push(e.message));
+
+  // 1. Root renders.
+  await page.goto("/");
+  await expect(page.getByPlaceholder("Ej. Yepes")).toBeVisible();
+
+  // 2. Ver estado -> /<slug>
+  await page.getByPlaceholder("Ej. Yepes").fill("Yepes");
+  await page.getByRole("button", { name: "Ver estado" }).click();
+  await expect(page).toHaveURL(/\/yepes$/);
+
+  // 3. Return to root and 4. Administrar -> /<slug>/admin
+  await page.goto("/");
+  await page.getByPlaceholder("Ej. Yepes").fill("Yepes");
+  await page.getByRole("button", { name: "Administrar" }).click();
+  await expect(page).toHaveURL(/\/yepes\/admin$/);
+
+  // 5. No hydration mismatch, no console/page errors.
+  const hydration = consoleErrors.filter((e) =>
+    /hydrat|did not match|server rendered|mismatch/i.test(e),
+  );
+  expect(hydration, `hydration errors: ${hydration.join(" | ")}`).toEqual([]);
+  expect(consoleErrors, `console errors: ${consoleErrors.join(" | ")}`).toEqual(
+    [],
+  );
+});
